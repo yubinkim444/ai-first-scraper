@@ -27,15 +27,18 @@
 
 | Method | Path | Returns | When to use |
 |--------|------|---------|-------------|
-| `GET`  | `/scrape?url=<URL>` | `application/json` with `{url, title, word_count, markdown}` | Default. Use when you need metadata alongside the content. |
-| `GET`  | `/raw?url=<URL>`    | `text/markdown` (body only) | Use when piping the output straight into an LLM prompt. |
-| `GET`  | `/`                 | `{status, service}` | Liveness probe. |
-| `GET`  | `/llms.txt`         | `text/markdown` | Self-describing spec following the llms.txt convention. |
+| `GET`  | `/scrape?url=<URL>[&max_tokens=N]` | `application/json` `{url, title, word_count, markdown, links, truncated, content_type}` | Default. Use when you need metadata + outbound links. |
+| `GET`  | `/raw?url=<URL>[&max_tokens=N]`    | `text/markdown` (body only) | Use when piping the output straight into an LLM prompt. |
+| `POST` | `/batch`                           | `application/json` array of per-URL results | Use when scraping 2–25 URLs at once (parallel fetch). |
+| `GET`  | `/`                                | `{status, service, version}` | Liveness probe. |
+| `GET`  | `/llms.txt`                        | `text/markdown` | Self-describing spec following the llms.txt convention. |
 
 ### Request contract
 - `url` MUST be a fully-qualified `http://` or `https://` URL, URL-encoded.
-- The server enforces a 15-second upstream timeout and a 5 MB response cap.
-- Only `GET` is supported. No request body is read.
+- `max_tokens` (optional, ≥100): soft cap on whitespace-split tokens in `markdown`. When exceeded, `truncated: true` is set.
+- Server enforces a 15-second upstream timeout and 10 MB response cap.
+- **HTML and PDF** are both supported — content type is auto-detected.
+- `/batch` body: `{"urls": [...up to 25...], "max_tokens": optional int}`.
 
 ### Response contract for `/scrape`
 ```json
@@ -43,9 +46,21 @@
   "url": "https://example.com/article",
   "title": "Article Title",
   "word_count": 842,
-  "markdown": "# Article Title\n\nThe article body in Markdown..."
+  "markdown": "# Article Title\n\nThe article body in Markdown...",
+  "links": ["https://example.com/other", "https://other.site/x"],
+  "truncated": false,
+  "content_type": "html"
 }
 ```
+
+### Response contract for `/batch`
+```json
+[
+  {"url": "https://ok.example", "ok": true,  "data": { /* ScrapeResponse */ }},
+  {"url": "https://bad.example", "ok": false, "error": "HTTP 404: ..."}
+]
+```
+Results are returned in the same order as the input URLs. One failing URL never blocks the others.
 
 ### Guarantees
 1. The `markdown` field has **no `<script>`, `<style>`, `<iframe>`, `<nav>`,
@@ -151,10 +166,18 @@ ai-first-scraper/
 ```
 
 ### Roadmap
+- [x] PDF support
+- [x] Batch endpoint
+- [x] Token-budget truncation (`max_tokens`)
+- [x] Outbound link extraction
 - [ ] Optional readability-style content extraction (`trafilatura` fallback)
 - [ ] Per-domain rate limiting & `robots.txt` honoring switch
-- [ ] Optional `?include_links=false` to strip anchors
 - [ ] Streaming `/raw` for very long pages
+- [ ] JS-rendered page support (Playwright fallback for SPA sites)
+
+### Companion projects
+- **[ai-first-search](https://github.com/yubinkim444/ai-first-search)** — search → multi-page scrape → markdown pipeline (Tavily-style).
+- **[ai-first-scraper-mcp](https://github.com/yubinkim444/ai-first-scraper-mcp)** — MCP server wrapping this API; plug straight into Claude Desktop / Cursor / Cline.
 
 ### Contributing
 PRs welcome. Keep `main.py` dependency-light; this project's value is in
