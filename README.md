@@ -178,6 +178,11 @@ ai-first-scraper/
 ### Companion projects
 - **[ai-first-search](https://github.com/yubinkim444/ai-first-search)** — search → multi-page scrape → markdown pipeline (Tavily-style).
 - **[ai-first-scraper-mcp](https://github.com/yubinkim444/ai-first-scraper-mcp)** — MCP server wrapping this API; plug straight into Claude Desktop / Cursor / Cline.
+- **[mcp-rec](https://github.com/yubinkim444/mcp-rec)** — VCR for MCP servers. Record any MCP server's traffic, replay deterministically.
+- **[llm-cache-proxy](https://github.com/yubinkim444/llm-cache-proxy)** — local SQLite cache for OpenAI/Anthropic API calls. 60–80% cheaper dev loops.
+- **[promptlocker](https://github.com/yubinkim444/promptlock)** — lockfile for prompts. Fail CI on drift.
+- **[context-diff](https://github.com/yubinkim444/context-diff)** — `git diff` for the Claude Code context window.
+- **[agentwatch](https://github.com/yubinkim444/agentwatch)** — React DevTools for browser AI agents (overlay + WebSocket SDK).
 
 ### Contributing
 PRs welcome. Keep `main.py` dependency-light; this project's value is in
