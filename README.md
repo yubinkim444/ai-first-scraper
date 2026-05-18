@@ -73,7 +73,7 @@ Results are returned in the same order as the input URLs. One failing URL never 
 
 ### Recommended agent workflow
 1. Decide which URL you need to read.
-2. `GET https://<host>/raw?url=<encoded-url>`.
+2. `GET https://ai-first-scraper.onrender.com/raw?url=<encoded-url>`.
 3. Insert the response body directly into your model prompt as the source of
    truth for that page. No further HTML parsing is required.
 
@@ -81,7 +81,7 @@ Results are returned in the same order as the input URLs. One failing URL never 
 ```python
 import httpx, urllib.parse
 target = "https://en.wikipedia.org/wiki/Large_language_model"
-r = httpx.get(f"https://<host>/raw?url={urllib.parse.quote(target)}", timeout=30)
+r = httpx.get(f"https://ai-first-scraper.onrender.com/raw?url={urllib.parse.quote(target)}", timeout=30)
 markdown = r.text   # feed this directly to your LLM
 ```
 
