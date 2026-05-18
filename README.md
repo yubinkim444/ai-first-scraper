@@ -193,5 +193,13 @@ ai-first-scraper/
 PRs welcome. Keep `main.py` dependency-light; this project's value is in
 being small and obvious.
 
+### Legal
+
+This is a neutral content-fetching tool. Users are responsible for ensuring
+their use complies with the terms of service of target sites and any
+applicable law (`robots.txt`, scraping policies, rate limits, copyright,
+etc.). The maintainers do not endorse, and are not responsible for, any
+specific use of this software.
+
 ### License
 MIT © ai-first-scraper contributors
