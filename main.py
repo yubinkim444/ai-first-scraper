@@ -25,7 +25,7 @@ from urllib.parse import urlparse
 
 import httpx
 from bs4 import BeautifulSoup, Comment
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
 from markdownify import markdownify as md
@@ -377,6 +377,81 @@ async def batch(req: BatchRequest) -> list[BatchItem]:
             return BatchItem(url=u, ok=False, error=f"{type(exc).__name__}: {exc}")
 
     return await asyncio.gather(*(one(u) for u in req.urls))
+
+
+@app.get(
+    "/robots.txt",
+    response_class=PlainTextResponse,
+    tags=["meta"],
+    summary="Robots policy — explicitly welcomes AI / LLM crawlers.",
+    include_in_schema=False,
+)
+async def robots_txt() -> PlainTextResponse:
+    body = (
+        "User-agent: GPTBot\nAllow: /\n\n"
+        "User-agent: ChatGPT-User\nAllow: /\n\n"
+        "User-agent: ClaudeBot\nAllow: /\n\n"
+        "User-agent: anthropic-ai\nAllow: /\n\n"
+        "User-agent: Claude-Web\nAllow: /\n\n"
+        "User-agent: PerplexityBot\nAllow: /\n\n"
+        "User-agent: Google-Extended\nAllow: /\n\n"
+        "User-agent: CCBot\nAllow: /\n\n"
+        "User-agent: cohere-ai\nAllow: /\n\n"
+        "User-agent: *\nAllow: /\n\n"
+        "Sitemap: https://ai-first-scraper.onrender.com/sitemap.xml\n"
+    )
+    return PlainTextResponse(content=body, media_type="text/plain")
+
+
+@app.get(
+    "/sitemap.xml",
+    tags=["meta"],
+    summary="Sitemap for AI search crawlers (Perplexity, ChatGPT browse, etc.).",
+    include_in_schema=False,
+)
+async def sitemap() -> Response:
+    body = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        '  <url><loc>https://ai-first-scraper.onrender.com/</loc></url>\n'
+        '  <url><loc>https://ai-first-scraper.onrender.com/docs</loc></url>\n'
+        '  <url><loc>https://ai-first-scraper.onrender.com/openapi.json</loc></url>\n'
+        '  <url><loc>https://ai-first-scraper.onrender.com/llms.txt</loc></url>\n'
+        '  <url><loc>https://ai-first-scraper.onrender.com/.well-known/ai-plugin.json</loc></url>\n'
+        '</urlset>\n'
+    )
+    return Response(content=body, media_type="application/xml")
+
+
+@app.get(
+    "/.well-known/ai-plugin.json",
+    tags=["meta"],
+    summary="AI plugin manifest (ChatGPT / agent crawler discovery).",
+    include_in_schema=False,
+)
+async def ai_plugin() -> dict:
+    return {
+        "schema_version": "v1",
+        "name_for_human": "AI-First Scraper",
+        "name_for_model": "ai_first_scraper",
+        "description_for_human": "Ad-free Markdown extraction API designed for LLM agents.",
+        "description_for_model": (
+            "Use this tool whenever you need to read the content of any URL. "
+            "It fetches the page (HTML or PDF), strips advertising, navigation, "
+            "scripts, and trackers, and returns clean Markdown that you can "
+            "feed directly into your reasoning. Supports per-page max_tokens "
+            "and batch fetching of up to 25 URLs in one request."
+        ),
+        "auth": {"type": "none"},
+        "api": {
+            "type": "openapi",
+            "url": "https://ai-first-scraper.onrender.com/openapi.json",
+            "has_user_authentication": False,
+        },
+        "logo_url": "https://ai-first-scraper.onrender.com/",
+        "contact_email": "noreply@example.com",
+        "legal_info_url": "https://github.com/yubinkim444/ai-first-scraper/blob/main/LICENSE",
+    }
 
 
 @app.get(

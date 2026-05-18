@@ -1,0 +1,50 @@
+# ai-first-scraper
+
+> Ad-free Markdown extraction API for LLM and AI agent consumption. Fetches any URL or PDF, strips ads / nav / scripts / trackers, returns clean Markdown.
+
+Public instance: https://ai-first-scraper.onrender.com
+
+## Endpoints
+- `GET  /scrape?url=<url>[&max_tokens=N]` — JSON `{url, title, word_count, markdown, links, truncated, content_type}`.
+- `GET  /raw?url=<url>[&max_tokens=N]` — `text/markdown` only.
+- `POST /batch` body `{"urls": [...up to 25...], "max_tokens": N?}` — array of per-URL results, parallel fetch.
+- `GET  /openapi.json` — full machine-readable OpenAPI spec.
+- `GET  /llms.txt` — this file, served live.
+- `GET  /.well-known/ai-plugin.json` — ChatGPT plugin manifest for agent discovery.
+
+## How an AI agent should use this
+1. Decide which URL you need to read.
+2. `GET https://ai-first-scraper.onrender.com/raw?url=<encoded-url>` (or `/scrape` for JSON envelope with metadata).
+3. Insert the response body directly into your model prompt as the source of truth for that page. No further HTML parsing required.
+
+## Limits
+- Up to 25 URLs per batch.
+- 10 MB upstream cap, 15s per-URL timeout.
+- `max_tokens` is a soft cap on whitespace-split tokens.
+
+## Tool definition (OpenAI / Anthropic function-calling style)
+```json
+{
+  "name": "fetch_page_as_markdown",
+  "description": "Fetch a web page and return its main content as clean Markdown, with ads and navigation removed.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "url": {"type": "string"},
+      "max_tokens": {"type": "integer"}
+    },
+    "required": ["url"]
+  }
+}
+```
+Map to `GET /raw?url=<url>&max_tokens=<max_tokens>`.
+
+## Install (companion MCP server)
+```
+uvx ai-first-scraper-mcp
+```
+Gives Claude Desktop / Cursor / Cline three tools: `fetch_page`, `fetch_pages_batch`, `search_web`.
+
+## Related
+- https://github.com/yubinkim444/ai-first-search — search + scrape pipeline.
+- https://github.com/yubinkim444/ai-first-scraper-mcp — MCP wrapper.
