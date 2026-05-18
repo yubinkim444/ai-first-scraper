@@ -111,6 +111,11 @@ scrapers either return raw HTML (too noisy) or hide their cleaning logic
 behind paid SaaS. `ai-first-scraper` is a tiny, self-hostable FastAPI service
 that does one thing: **URL in, clean Markdown out**.
 
+### Public hosted instances
+
+- **Render**: <https://ai-first-scraper.onrender.com> (primary)
+- **HuggingFace Space**: <https://fingerdog50-ai-first-scraper.hf.space> (mirror)
+
 ### Quick start
 
 ```bash
